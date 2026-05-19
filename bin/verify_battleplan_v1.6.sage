@@ -1,5 +1,5 @@
 import json
-import re
+import csv
 from sage.all import *
 
 print("=== Battle Plan v1.6 Verification ===")
@@ -24,19 +24,27 @@ print(f"[Tendon C] Colmez Desert a6 = {a6}")
 assert a6 == 733, f"Expected a6=733, got {a6}"
 print("[Tendon C] Colmez Desert a6 = 733 ✓")
 
-# [Tendon D] Prime sets - ROBUST VERSION for large primes + headers
+# [Tendon D] Prime sets - FIXED CSV PARSING
 print("[Tendon D] Loading S4_primes.csv...")
+S4 = []
 with open('data/S4_primes.csv') as f:
-    content = f.read()
-    # Extract only sequences of digits, skip headers/text
-    S4 = [Integer(x) for x in re.findall(r'\d+', content)][:4]
+    reader = csv.DictReader(f)
+    for row in reader:
+        # Grab the 'prime' column specifically, not the index
+        S4.append(Integer(row['prime']))
 print(f"[Tendon D] |S4| = {len(S4)}")
 print(f"[Tendon D] S4 = {S4}")
 
 print("[Tendon D] Loading S14_large_primes.txt...")
+S14_rest = []
 with open('data/S14_large_primes.txt') as f:
-    # Grab all digit sequences, handles huge primes + any formatting
-    S14_rest = [Integer(x) for x in re.findall(r'\d+', f.read())]
+    for line in f:
+        line = line.strip()
+        if line and line.isdigit(): # Only pure digit lines
+            S14_rest.append(Integer(line))
+        if len(S14_rest) >= 10: # Battle Plan v1.6: S14\S4 has exactly 10 primes
+            break
+
 S14 = S4 + S14_rest
 print(f"[Tendon D] |S14_rest| = {len(S14_rest)}")
 print(f"[Tendon D] |S14| = {len(S14)}")
@@ -44,6 +52,7 @@ print(f"[Tendon D] |S14\\S4| = {len(S14) - len(S4)} ✓")
 
 assert len(S4) == 4, f"Expected |S4|=4, got {len(S4)}"
 assert len(S14) == 14, f"Expected |S14|=14, got {len(S14)}"
+assert len(S14_rest) == 10, f"Expected |S14\\S4|=10, got {len(S14_rest)}"
 
 # [Tendon E] Bost sum threshold
 C_alpha = data['tendon_E']['C_alpha0']
