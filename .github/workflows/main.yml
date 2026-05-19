@@ -1,5 +1,9 @@
 name: Verify-and-Build
 on: [push, workflow_dispatch]
+
+env:
+  TEX_FILE: main.tex  # Your .tex is in root
+
 jobs:
   verify:
     name: Verify Battle Plan v1.6
@@ -12,19 +16,16 @@ jobs:
   
   build-pdf:
     name: Build PDF
-    needs: verify  # Enforces "No μ-bound → No build"
+    needs: verify
     runs-on: ubuntu-latest
     container: texlive/texlive:latest
     steps:
       - uses: actions/checkout@v4
       - name: Build PDF
-        run: |
-          # Change this path to where your .tex lives
-          cd paper
-          latexmk -pdf -interaction=nonstopmode main.tex
+        run: latexmk -pdf -interaction=nonstopmode ${{ env.TEX_FILE }}
       - name: Upload PDF Artifact
         uses: actions/upload-artifact@v4
         with:
           name: bdp-self-symmetry-v1.6-verified
-          path: paper/main.pdf
+          path: main.pdf
           retention-days: 90
