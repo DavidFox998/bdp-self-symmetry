@@ -1,16 +1,30 @@
-name: Verify Battle Plan v1.6
-on: workflow_dispatch
+name: Verify-and-Build
+on: [push, workflow_dispatch]
 jobs:
   verify:
+    name: Verify Battle Plan v1.6
     runs-on: ubuntu-latest
     container: sagemath/sagemath:latest
     steps:
       - uses: actions/checkout@v4
-      - name: Run Battle Plan Verification
+      - name: Verify Battle Plan v1.6
         run: sage bin/verify_battleplan_v1.6.sage
-      - name: Show SHA Anchors
+  
+  build-pdf:
+    name: Build PDF
+    needs: verify  # Enforces "No μ-bound → No build"
+    runs-on: ubuntu-latest
+    container: texlive/texlive:latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build PDF
         run: |
-          echo "=== SHA256 Hashes ==="
-          sha256sum data/invariants.json
-          sha256sum data/S4_primes.csv
-          sha256sum data/S14_large_primes.txt
+          # Change this path to where your .tex lives
+          cd paper
+          latexmk -pdf -interaction=nonstopmode main.tex
+      - name: Upload PDF Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: bdp-self-symmetry-v1.6-verified
+          path: paper/main.pdf
+          retention-days: 90
